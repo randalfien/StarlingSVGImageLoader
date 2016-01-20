@@ -2021,7 +2021,7 @@ package org.svgweb.core
         public function getWidth():Number {
             var parentWidth:Number=0;
             if (topSprite.parent is SVGViewer) {
-                parentWidth = SVGViewer(topSprite.parent).getWidth();
+                parentWidth = 0;
             }
             if (this.svgParent != null) {
                 parentWidth = this.svgParent.getWidth();
@@ -2037,7 +2037,7 @@ package org.svgweb.core
         public function getHeight():Number {
             var parentHeight:Number=0;
             if (topSprite.parent is SVGViewer) {
-                parentHeight=SVGViewer(topSprite.parent).getHeight();
+                parentHeight = 0;
             }
             if (this.svgParent is SVGNode) {
                 parentHeight=this.svgParent.getHeight();

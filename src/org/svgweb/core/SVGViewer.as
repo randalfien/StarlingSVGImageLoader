@@ -25,6 +25,8 @@ package org.svgweb.core
         public var isSuspended:Boolean = false;
         protected var urlLoader:URLLoader;
 		private var _url:String;
+		private var _declaredHeight:Number;
+		private var _declaredWidth:Number;
         public function SVGViewer() {
             XML.ignoreProcessingInstructions = false;
             XML.ignoreComments = false;
@@ -44,7 +46,7 @@ package org.svgweb.core
 			try{
             	xml = new XML(urlLoader.data);
 			}catch( e:TypeError ){
-				trace("unsupported:" + _url);
+				trace("invalid data recieved:" + _url + ", data:"+String(urlLoader.data).substring(0,400)) ;
 			}
             urlLoader = null;
         }
@@ -59,20 +61,14 @@ package org.svgweb.core
             urlLoader = null;
         }
 
-        public function getWidth():Number {
-            return 0;
-        }
-
-        public function getHeight():Number {
-            return 0;
-        }
-
         public function set xml(value:XML):void {
             if (svgRoot != null) {
                 this.removeChild(svgRoot.topSprite);
             }
             svgRoot = new SVGSVGNode(null, value, null, this);
 			svgRoot.addEventListener(SVGEvent.SVGLoad, onLoaded);
+			declaredWidth = parseFloat(value.@width);
+			declaredHeight = parseFloat(value.@height);
             this.addChild(svgRoot.topSprite);
         }
 		
@@ -107,5 +103,11 @@ package org.svgweb.core
 			svgRoot = null;
 			removeChildren();
 		}
+
+		public function get declaredHeight():Number	{	return _declaredHeight;	}
+		public function set declaredHeight(value:Number):void	{	_declaredHeight = value;	}
+		public function get declaredWidth():Number	{	return _declaredWidth;	}
+		public function set declaredWidth(value:Number):void	{	_declaredWidth = value;	}
+
 	}
 }

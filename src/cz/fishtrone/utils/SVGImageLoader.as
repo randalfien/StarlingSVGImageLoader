@@ -1,4 +1,4 @@
-package cz.fishtrone.util
+package cz.fishtrone.utils
 {
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -10,6 +10,7 @@ package cz.fishtrone.util
 	import starling.display.Sprite;
 	import starling.events.Event;
 	import starling.textures.Texture;
+	import starling.textures.TextureSmoothing;
 
 	/**
 	 * SVG Image Loader
@@ -25,6 +26,11 @@ package cz.fishtrone.util
 	 */ 
 	public class SVGImageLoader extends starling.display.Sprite
 	{
+		private var _maxWidth:Number = Number.MAX_VALUE;
+
+		private var _img:Image;
+		private var _smoothing:String;
+		
 		public function SVGImageLoader(url:String = null, width:int = -1, height:int = -1)
 		{
 			if( url )
@@ -43,41 +49,74 @@ package cz.fishtrone.util
 			// A placeholder image, set to 1 px to save memory
 			var bmpData:BitmapData = new BitmapData( 1, 1, false, 0xCACACA);
 			var tempTexture:Texture = Texture.fromBitmapData(bmpData);
-			var img:Image = new Image(tempTexture);
-			img.scaleX = attrWidth;
-			img.scaleY = attrHeight;
+			_img = new Image(tempTexture);
+			_img.scaleX = attrWidth;
+			_img.scaleY = attrHeight;
 			
-			addChild(img);
+			addChild(_img);
 			
-			if( url.indexOf("svg") < 0 )
-			{
-				trace("UNSUPPORTED IMAGE:"+url);
-				return;
-			} 
-			
-			svg.addEventListener(Event.COMPLETE, onComplete);
-			
+			svg.addEventListener(Event.COMPLETE, onComplete);		
 			svg.loadURL(url);
 			
 			function onComplete(e:Object):void
 			{
 				dispatchEventWith(Event.COMPLETE);
-				var maxScale:Number = 2048/svg.width; //max texture size
-				svg.scaleX = Math.min( scaleX, maxScale);
-				svg.scaleY = Math.min( scaleY, maxScale);
+				
+				
+				var maxScale:Number = Math.min( 2048/svg.width, 2048/svg.height ); //max texture size
+				var baseScaleX:Number = svg.declaredWidth/svg.width; //corrects difference between actual width and width declared in svg width attribute
+				var baseScaleY:Number = svg.declaredHeight/svg.width;
+				if( width > 0 )
+				{
+					svg.width = Math.min( width*scaleX*baseScaleX, maxWidth );
+					svg.scaleX =  Math.min( svg.scaleX, maxScale ); 
+					svg.scaleY = svg.scaleX; //keep aspect ratio
+				}
+				else if (height > 0)
+				{
+					svg.height = height*scaleY*baseScaleY;
+					svg.scaleY =  Math.min( svg.scaleY, maxScale ); 
+					svg.scaleX = svg.scaleY; //keep aspect ratio
+				}else{   //width and height not set
+					svg.width = Math.min( svg.width*scaleX*baseScaleX, maxWidth );
+					svg.scaleX =  Math.min( svg.scaleX, maxScale ); 
+					svg.scaleY = svg.scaleX; //keep aspect ratio
+				}
+				
+				_img.scaleX = 1/scaleX;
+				_img.scaleY = 1/scaleY;
+				
 				var a:flash.display.Sprite = new flash.display.Sprite();//hack to scale correctly
 				a.addChild(svg);
+				
+				if( a.width <= 0 || a.height <= 0 ){
+					trace("Warning: rendered svg empty "+url);
+					return;
+				}
+				
 				bmpData = new BitmapData(a.width, a.height, true, 0x0);
 				bmpData.draw(a);
-				img.scaleX = 1/svg.scaleX; 
-				img.scaleY = 1/svg.scaleY;
-				img.texture = Texture.fromBitmapData(bmpData);
-				img.readjustSize();
+				
+				_img.texture = Texture.fromBitmapData(bmpData);
+				_img.smoothing = _smoothing;
+				_img.readjustSize();
 				svg.removeEventListener(e.type, arguments.callee);
 				svg.dispose();
 			}
 			
 		}
+		
+		public function get smoothing():String	{		return _smoothing;	}
+		/**
+		 * Smoothing to apply to the image  @see TextureSmoothing
+		 */ 
+		public function set smoothing(value:String):void	{	_smoothing = value;	if (_img ) _img.smoothing = value;	}
+
+		public function get maxWidth():Number	{		return _maxWidth;	}
+		/**
+		 * Max width for the scaled image. When you specify exact width or height it gets ignored 
+		 */ 
+		public function set maxWidth(value:Number):void	{		_maxWidth = value;	}
 		
 	}
 }
