@@ -11,7 +11,7 @@ package cz.fishtrone.utils
 	import starling.events.Event;
 	import starling.textures.Texture;
 	import starling.textures.TextureSmoothing;
-
+	
 	/**
 	 * SVG Image Loader
 	 * dipatches Event.COMPLETE when loading finished.
@@ -20,14 +20,14 @@ package cz.fishtrone.utils
 	 * <br>
 	 * Example: <br>
 	 * 			var ld:SVGImageLoader = new SVGImageLoader();      			<br>
-				ld.load( "http://server.com/resource.svg" ); 	<br>
-				ld.scaleX = ld.scaleY = 3; 									<br>
-				addChild(ld);  												<br>
+	 ld.load( "http://server.com/resource.svg" ); 	<br>
+	 ld.scaleX = ld.scaleY = 3; 									<br>
+	 addChild(ld);  												<br>
 	 */ 
 	public class SVGImageLoader extends starling.display.Sprite
 	{
 		private var _maxWidth:Number = Number.MAX_VALUE;
-
+		
 		private var _img:Image;
 		private var _smoothing:String;
 		
@@ -62,23 +62,23 @@ package cz.fishtrone.utils
 			{
 				dispatchEventWith(Event.COMPLETE);
 				
-				
 				var maxScale:Number = Math.min( 2048/svg.width, 2048/svg.height ); //max texture size
-				var baseScaleX:Number = svg.declaredWidth/svg.width; //corrects difference between actual width and width declared in svg width attribute
-				var baseScaleY:Number = svg.declaredHeight/svg.width;
+				
+				var w:Number = svg.declaredWidth || svg.width;
+				var h:Number = svg.declaredHeight || svg.height;
+				
 				if( width > 0 )
 				{
-					svg.width = Math.min( width*scaleX*baseScaleX, maxWidth );
-					svg.scaleX =  Math.min( svg.scaleX, maxScale ); 
+					svg.scaleX =  Math.min( scaleX * width/w , maxScale ); 
+					svg.width = Math.min( svg.width, maxWidth );
 					svg.scaleY = svg.scaleX; //keep aspect ratio
 				}
 				else if (height > 0)
 				{
-					svg.height = height*scaleY*baseScaleY;
-					svg.scaleY =  Math.min( svg.scaleY, maxScale ); 
+					svg.scaleY =  Math.min( scaleY * height/h , maxScale ); 
 					svg.scaleX = svg.scaleY; //keep aspect ratio
 				}else{   //width and height not set
-					svg.width = Math.min( svg.width*scaleX*baseScaleX, maxWidth );
+					svg.width = Math.min( w*scaleX, maxWidth );
 					svg.scaleX =  Math.min( svg.scaleX, maxScale ); 
 					svg.scaleY = svg.scaleX; //keep aspect ratio
 				}
@@ -90,7 +90,7 @@ package cz.fishtrone.utils
 				a.addChild(svg);
 				
 				if( a.width <= 0 || a.height <= 0 ){
-					trace("Warning: rendered svg empty "+url);
+					trace("Warning: rendered svg empty "+url); //avoid Invalid BitmapData error
 					return;
 				}
 				
@@ -111,7 +111,7 @@ package cz.fishtrone.utils
 		 * Smoothing to apply to the image  @see TextureSmoothing
 		 */ 
 		public function set smoothing(value:String):void	{	_smoothing = value;	if (_img ) _img.smoothing = value;	}
-
+		
 		public function get maxWidth():Number	{		return _maxWidth;	}
 		/**
 		 * Max width for the scaled image. When you specify exact width or height it gets ignored 
